@@ -7,6 +7,6 @@ typedef struct {
 	float z;
 } Vertex;
 
-void saveVertexTxt(Vertex *vertex, FILE *file);
+void saveVertexTxt(Vertex* vertex, FILE* file);
 
-void createVertex(char *line, Vertex *vertex);
+Vertex* createVertex(char* line);

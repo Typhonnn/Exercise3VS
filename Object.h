@@ -6,26 +6,26 @@
 typedef struct {
 	// Array of all Vertexes
 	int numberOfVertexes;
-	Vertex *vertexes;
+	Vertex* vertexes;
 	// Array of all Faces
 	int numberOfFaces;
-	Face *faces;
+	Face* faces;
 } Object;
 
-Object* createObject(char *filename);
+Object* createObject(char* filename);
 
-void printFaces(Object *ptr, void *numberOfTriangularFaces);
+void printFaces(Object* ptr, void* numberOfTriangularFaces);
 
-void printVertexes(Object *ptr, void *numberOfVertexes);
+void printVertexes(Object* ptr, void* numberOfVertexes);
 
-void getTotalArea(Object *ptr, void *totalAreaOfTriangularFaces);
+void getTotalArea(Object* ptr, void* totalAreaOfTriangularFaces);
 
-void saveObjectBinary(Object *object, FILE *file);
+void saveObjectBinary(Object* object, FILE* file);
 
-void saveObjectTxt(Object *object, FILE *file);
+void saveObjectTxt(Object* object, FILE* file);
 
-void loadObjectBinary(FILE *file, Object *object);
+void loadObjectBinary(FILE* file, Object* object);
 
-void loadObjectTxt(FILE *file, Object *object);
+void loadObjectTxt(FILE* file, Object* object);
 
-void transformObject(char *originalObjectFileName, char *deformedObjectFileName);
+void transformObject(char* originalObjectFileName, char* deformedObjectFileName);
