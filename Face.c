@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+//Saves a Face to txt file.
 void saveFaceTxt(Face* face, FILE* file) {
 	int i;
 	fprintf(file, "f ");
@@ -11,6 +12,7 @@ void saveFaceTxt(Face* face, FILE* file) {
 	fprintf(file, "\n");
 }
 
+//This function takes the pointer to a Face and uses the string to define it.
 void createFace(char* line, Face* face) {
 	face->vertex = calloc(1, sizeof(int));
 	if (face->vertex == NULL) {

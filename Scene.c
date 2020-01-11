@@ -4,8 +4,9 @@
 #include <string.h>
 #include <stdarg.h>
 
-errno_t err;
+errno_t err; //ptr for checking NULL
 
+//This is a variadic function that takes a string of file names and creates a scene with objects in it.
 Scene* createScene(char* fileName, ...) {
 	Scene* scene = malloc(sizeof(Scene));
 	if (scene == NULL) {
@@ -23,7 +24,7 @@ Scene* createScene(char* fileName, ...) {
 	va_list allFile;
 	va_start(allFile, fileName);
 	char* currentFile = fileName;
-	if (currentFile != NULL) {
+	if (currentFile != NULL) { //Due to ObjectList->next logic in while. We have this condition for the first file.
 		objList->object = createObject(currentFile);
 		currentFile = va_arg(allFile, char*);
 		scene->numOfObjects++;
@@ -43,6 +44,7 @@ Scene* createScene(char* fileName, ...) {
 	return scene;
 }
 
+//This function takes a file name and defines a file type (TXT / Binary) and loads a scene from it.
 Scene* loadScene(char* fileName, enum FileType type) {
 	int counter = 0;
 	FILE* file = NULL;
@@ -67,8 +69,8 @@ Scene* loadScene(char* fileName, enum FileType type) {
 			"Failed To Allocate Memory For New Scene Object List! ABORTING!");
 		return NULL;
 	}
-	scene->numOfObjects = 1;
-	if (!feof(file) && type == BinaryFormat) {
+	scene->numOfObjects = 1; //This is to allow txt file to run the loop.
+	if (!feof(file) && type == BinaryFormat) { //Due to the nature of loadObject, only the binary file needed the number of objects. 
 		fread(&scene->numOfObjects, sizeof(int), 1, file);
 	}
 	scene->header->next = NULL;
@@ -103,6 +105,7 @@ Scene* loadScene(char* fileName, enum FileType type) {
 	return scene;
 }
 
+//This function takes an existing scene with objects, file name, and file type and saves it to a file. 
 void saveScene(Scene* scene, char* fileName, enum FileType type) {
 	FILE* file = NULL;
 	if (type == TextFormat) {
@@ -134,6 +137,7 @@ void saveScene(Scene* scene, char* fileName, enum FileType type) {
 	
 }
 
+//This function takes a pointer to a function, a string the represent type to print, and performs the pointed function.
 void perform(Scene* scene, void (*func)(Object*, void*), char* type,
 	char* string) {
 	ObjectList* objList = scene->header;
@@ -158,6 +162,7 @@ void perform(Scene* scene, void (*func)(Object*, void*), char* type,
 	}
 }
 
+//Frees the allocated memory a scene holds.
 void freeScene(Scene* scene) {
 	int i;
 	while (scene->header != NULL) {

@@ -12,6 +12,7 @@
 
 errno_t err;
 
+//Takes a file name for data on object and uses it to create and return an Object.
 Object* createObject(char* filename) {
 	FILE* file;
 	err = fopen_s(&file, filename, "r");
@@ -24,13 +25,14 @@ Object* createObject(char* filename) {
 		printf("Failed Allocating Memory For Object! ABORTING!");
 		return NULL;
 	}
-	loadObjectTxt(file, object);
+	loadObjectTxt(file, object); //Calls the method to handle the reading.
 	if (file) {
 		err = fclose(file);
 	}
 	return object;
 }
 
+//Saves an Object to a binary file.
 void saveObjectBinary(Object* object, FILE* file) {
 	int i;
 	fwrite(&object->numberOfVertexes, sizeof(int), 1, file);
@@ -43,6 +45,7 @@ void saveObjectBinary(Object* object, FILE* file) {
 	}
 }
 
+//Loades an Object from a binary file.
 void loadObjectBinary(FILE* file, Object* object) {
 	int i;
 	fread(&object->numberOfVertexes, sizeof(int), 1, file);
@@ -71,6 +74,7 @@ void loadObjectBinary(FILE* file, Object* object) {
 	}
 }
 
+//Saves an Object to a txt file.
 void saveObjectTxt(Object* object, FILE* file) {
 	int i;
 	fprintf(file, "\n# %d %s", object->numberOfVertexes, VERTEX_POS);
@@ -84,6 +88,7 @@ void saveObjectTxt(Object* object, FILE* file) {
 	fprintf(file, "%s", END_OBJECT);
 }
 
+//Loads an Object from a txt file.
 void loadObjectTxt(FILE* file, Object* object) {
 	object->vertexes = malloc(sizeof(Vertex));
 	if (object->vertexes == NULL) {
@@ -133,65 +138,39 @@ void loadObjectTxt(FILE* file, Object* object) {
 	}
 }
 
+//This method calculates the total area of triangular faces of an Object.
+//It uses Heron's Formula to find the solution.
 void getTotalArea(Object* ptr, void* totalAreaOfTriangularFaces) {
 	int i;
 	double s, a, b, c;
 	for (i = 0; i < ptr->numberOfFaces; ++i) {
 		if (ptr->faces[i].size == 3) {
-			a =
-				pow(
-					pow(
-					(ptr->vertexes[ptr->faces[i].vertex[0] - 1].x
-						- ptr->vertexes[ptr->faces[i].vertex[1]	- 1].x), 2)
-					+ pow(
-					(ptr->vertexes[ptr->faces[i].vertex[0]
-						- 1].y
-						- ptr->vertexes[ptr->faces[i].vertex[1]
-						- 1].y), 2)
-					+ pow(
-					(ptr->vertexes[ptr->faces[i].vertex[0]
-						- 1].z
-						- ptr->vertexes[ptr->faces[i].vertex[1]
-						- 1].z), 2), 0.5);
-			b =
-				pow(
-					pow(
-					(ptr->vertexes[ptr->faces[i].vertex[0] - 1].x
-						- ptr->vertexes[ptr->faces[i].vertex[2]
-						- 1].x), 2)
-					+ pow(
-					(ptr->vertexes[ptr->faces[i].vertex[0]
-						- 1].y
-						- ptr->vertexes[ptr->faces[i].vertex[2]
-						- 1].y), 2)
-					+ pow(
-					(ptr->vertexes[ptr->faces[i].vertex[0]
-						- 1].z
-						- ptr->vertexes[ptr->faces[i].vertex[2]
-						- 1].z), 2), 0.5);
-			c =
-				pow(
-					pow(
-					(ptr->vertexes[ptr->faces[i].vertex[1] - 1].x
-						- ptr->vertexes[ptr->faces[i].vertex[2]
-						- 1].x), 2)
-					+ pow(
-					(ptr->vertexes[ptr->faces[i].vertex[1]
-						- 1].y
-						- ptr->vertexes[ptr->faces[i].vertex[2]
-						- 1].y), 2)
-					+ pow(
-					(ptr->vertexes[ptr->faces[i].vertex[1]
-						- 1].z
-						- ptr->vertexes[ptr->faces[i].vertex[2]
-						- 1].z), 2), 0.5);
+			a =	pow(pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].x -
+				ptr->vertexes[ptr->faces[i].vertex[1]	- 1].x), 2)	+
+				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].y -
+					ptr->vertexes[ptr->faces[i].vertex[1] - 1].y), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].z -
+					ptr->vertexes[ptr->faces[i].vertex[1] - 1].z), 2), 0.5);
+			b =	pow(pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].x -
+				ptr->vertexes[ptr->faces[i].vertex[2] - 1].x), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].y -
+					ptr->vertexes[ptr->faces[i].vertex[2] - 1].y), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].z -
+					ptr->vertexes[ptr->faces[i].vertex[2] - 1].z), 2), 0.5);
+			c =	pow(pow((ptr->vertexes[ptr->faces[i].vertex[1] - 1].x -
+				ptr->vertexes[ptr->faces[i].vertex[2] - 1].x), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[1] - 1].y -
+					ptr->vertexes[ptr->faces[i].vertex[2] - 1].y), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[1] - 1].z -
+					ptr->vertexes[ptr->faces[i].vertex[2] - 1].z), 2), 0.5);
 			s = (a + b + c) / 2;
-			*(double*)totalAreaOfTriangularFaces += pow(
-				s * (s - a) * (s - b) * (s - c), 0.5);
+			*(double*)totalAreaOfTriangularFaces +=
+				pow(s * (s - a) * (s - b) * (s - c), 0.5);
 		}
 	}
 }
 
+//This function gives the number of vertexes of an Object.
 void printVertexes(Object* ptr, void* numberOfVertexes) {
 	*(int*)numberOfVertexes += ptr->numberOfVertexes;
 }
