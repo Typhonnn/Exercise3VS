@@ -7,6 +7,7 @@ typedef struct ObjectList {
 } ObjectList;
 
 typedef struct {
+	int numOfObjects;
 	struct ObjectList* header;
 } Scene;
 

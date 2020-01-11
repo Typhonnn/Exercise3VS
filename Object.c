@@ -55,10 +55,9 @@ void loadObjectBinary(FILE* file, Object* object) {
 	fread(object->vertexes, sizeof(Vertex), numOfVertexes, file);
 	fread(&object->numberOfFaces, sizeof(int), 1, file);
 	object->faces = malloc(object->numberOfFaces * sizeof(Face));
-
 	if (object->faces == NULL) {
 		printf("Failed To Allocate Memory For Faces! ABORTING!");
-		return;
+		return ;
 	}
 	for (i = 0; i < object->numberOfFaces; ++i) {
 		fread(&object->faces[i].size, sizeof(int), 1, file);
@@ -194,11 +193,7 @@ void getTotalArea(Object* ptr, void* totalAreaOfTriangularFaces) {
 }
 
 void printVertexes(Object* ptr, void* numberOfVertexes) {
-	if (ptr->numberOfVertexes == NULL) {
-		return;
-	}
-	int total = ptr->numberOfVertexes;
-	*(int*)numberOfVertexes += total;
+	*(int*)numberOfVertexes += ptr->numberOfVertexes;
 }
 
 void printFaces(Object* ptr, void* numberOfTriangularFaces) {
@@ -240,5 +235,4 @@ void transformObject(char* originalObjectFileName, char* deformedObjectFileName)
 	}
 	fclose(orgFile);
 	fclose(defoFile);
-	free(line);
 }

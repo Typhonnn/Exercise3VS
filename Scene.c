@@ -17,6 +17,7 @@ Scene* createScene(char* fileName, ...) {
 		printf("Failed To Allocate Memory For New Object List! ABORTING!");
 		return NULL;
 	}
+	scene->numOfObjects = 0;
 	scene->header->next = NULL;
 	ObjectList* objList = scene->header;
 	va_list allFile;
@@ -25,6 +26,7 @@ Scene* createScene(char* fileName, ...) {
 	if (currentFile != NULL) {
 		objList->object = createObject(currentFile);
 		currentFile = va_arg(allFile, char*);
+		scene->numOfObjects++;
 	}
 	while (currentFile != NULL) {
 		objList->next = malloc(sizeof(struct ObjectList));
@@ -35,12 +37,14 @@ Scene* createScene(char* fileName, ...) {
 		objList = objList->next;
 		objList->next = NULL;
 		objList->object = createObject(currentFile);
+		scene->numOfObjects++;
 		currentFile = va_arg(allFile, char*);
 	}
 	return scene;
 }
 
 Scene* loadScene(char* fileName, enum FileType type) {
+	int counter = 0;
 	FILE* file = NULL;
 	if (type == TextFormat) {
 		err = fopen_s(&file,fileName, "r");
@@ -63,10 +67,14 @@ Scene* loadScene(char* fileName, enum FileType type) {
 			"Failed To Allocate Memory For New Scene Object List! ABORTING!");
 		return NULL;
 	}
+	scene->numOfObjects = 1;
+	if (!feof(file) && type == BinaryFormat) {
+		fread(&scene->numOfObjects, sizeof(int), 1, file);
+	}
 	scene->header->next = NULL;
 	ObjectList* objList = scene->header;
 	ObjectList* preObjList = objList;
-	while (!feof(file)) {
+	while (!feof(file) && counter < scene->numOfObjects) {
 		objList->object = malloc(sizeof(Object));
 		if (objList->object == NULL) {
 			printf("Failed To Allocate Memory For New Object! ABORTING!");
@@ -77,6 +85,7 @@ Scene* loadScene(char* fileName, enum FileType type) {
 		}
 		else if (type == BinaryFormat) {
 			loadObjectBinary(file, objList->object);
+			counter++;
 		}
 		objList->next = malloc(sizeof(struct ObjectList));
 		if (objList->next == NULL) {
@@ -106,6 +115,9 @@ void saveScene(Scene* scene, char* fileName, enum FileType type) {
 		printf("File Open Failed! ABORTING!");
 		return;
 	}
+	if (type == BinaryFormat) {
+		fwrite(&scene->numOfObjects, sizeof(int), 1, file);
+	}
 	ObjectList* objList = scene->header;
 	while (objList != NULL) {
 		if (type == TextFormat) {
@@ -126,24 +138,20 @@ void perform(Scene* scene, void (*func)(Object*, void*), char* type,
 	char* string) {
 	ObjectList* objList = scene->header;
 	if (strcmp(type, "INT") == 0) {
-		void* total = calloc(1, sizeof(int));
-		*(int*)total = 0;
+		int total = 0;
 		while (objList != NULL) {
-			func(objList->object, total);
+			func(objList->object, &total);
 			objList = objList->next;
 		}
-		printf("%s %d\n", string, *(int*)total);
-		free(total);
+		printf("%s %d\n", string, total);
 	}
 	else if (strcmp(type, "DOUBLE") == 0) {
-		void* total = calloc(1, sizeof(double));
-		*(double*)total = 0;
+		double total = 0;
 		while (objList != NULL) {
-			func(objList->object, total);
+			func(objList->object, &total);
 			objList = objList->next;
 		}
-		printf("%s %lf\n", string, *(double*)total);
-		free(total);
+		printf("%s %lf\n", string, total);
 	}
 	else {
 		printf("%s is not a valid type", type);
