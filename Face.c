@@ -18,18 +18,18 @@ void createFace(char* line, Face* face) {
 		return;
 	}
 	int* vertexes = face->vertex;
-	face->size = 0;
 	char* delimiters = "f ";
 	char* nextSplitLine = NULL;
 	char* splitLine = strtok_s(line, delimiters, &nextSplitLine);
-	while (nextSplitLine != NULL) {
+	face->size = 0;
+	while (splitLine != NULL) {
 		face->vertex = realloc(vertexes, ((face->size) + 1) * sizeof(int));
-		if (vertexes == NULL) {
+		if (face->vertex == NULL) {
 			printf("Failed To Reallocate Memory For New vertexes! ABORTING!");
 			return;
 		}
 		vertexes = face->vertex;
-		face->vertex[face->size++] = strtol(splitLine, NULL, 10);
+		face->vertex[face->size++] = atoi(splitLine);
 		splitLine = strtok_s(NULL, delimiters, &nextSplitLine);
 	}
 }

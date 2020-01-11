@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdarg.h>
 
+errno_t err;
+
 Scene* createScene(char* fileName, ...) {
 	Scene* scene = malloc(sizeof(Scene));
 	if (scene == NULL) {
@@ -41,12 +43,12 @@ Scene* createScene(char* fileName, ...) {
 Scene* loadScene(char* fileName, enum FileType type) {
 	FILE* file = NULL;
 	if (type == TextFormat) {
-		file = fopen(fileName, "r");
+		err = fopen_s(&file,fileName, "r");
 	}
 	else if (type == BinaryFormat) {
-		file = fopen(fileName, "rb");
+		err = fopen_s(&file,fileName, "rb");
 	}
-	if (file == NULL) {
+	if (err != 0) {
 		printf("File Open Failed! ABORTING!");
 		return NULL;
 	}
@@ -85,7 +87,9 @@ Scene* loadScene(char* fileName, enum FileType type) {
 		objList = objList->next;
 		objList->next = NULL;
 	}
-	fclose(file);
+	if (file) {
+		err = fclose(file);
+	}
 	preObjList->next = NULL;
 	return scene;
 }
@@ -93,12 +97,12 @@ Scene* loadScene(char* fileName, enum FileType type) {
 void saveScene(Scene* scene, char* fileName, enum FileType type) {
 	FILE* file = NULL;
 	if (type == TextFormat) {
-		file = fopen(fileName, "w");
+		err = fopen_s(&file,fileName, "w");
 	}
 	else if (type == BinaryFormat) {
-		file = fopen(fileName, "wb");
+		err = fopen_s(&file,fileName, "wb");
 	}
-	if (file == NULL) {
+	if (err != 0) {
 		printf("File Open Failed! ABORTING!");
 		return;
 	}
@@ -112,7 +116,10 @@ void saveScene(Scene* scene, char* fileName, enum FileType type) {
 		}
 		objList = objList->next;
 	}
-	fclose(file);
+	if (file) {
+		err = fclose(file);
+	}
+	
 }
 
 void perform(Scene* scene, void (*func)(Object*, void*), char* type,

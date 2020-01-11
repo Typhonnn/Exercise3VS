@@ -13,6 +13,6 @@ Vertex* createVertex(char* line) {
 		printf("Failed To Allocate Memory For Vertex! ABORTING!");
 		return NULL;
 	}
-	sscanf(line, "%*c %f %f %f", &vertex->x, &vertex->y, &vertex->z);
+	sscanf_s(line, "%*c %f %f %f", &vertex->x, &vertex->y, &vertex->z);
 	return vertex;
 }

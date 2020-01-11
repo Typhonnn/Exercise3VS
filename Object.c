@@ -10,9 +10,12 @@
 #define FACE_POS "face positions\n"
 #define MAX_LINE 300
 
+errno_t err;
+
 Object* createObject(char* filename) {
-	FILE* file = fopen(filename, "r");
-	if (file == NULL) {
+	FILE* file;
+	err = fopen_s(&file, filename, "r");
+	if (err != 0) {
 		printf("Failed Opening File %s! Aborting!", filename);
 		return NULL;
 	}
@@ -22,7 +25,9 @@ Object* createObject(char* filename) {
 		return NULL;
 	}
 	loadObjectTxt(file, object);
-	fclose(file);
+	if (file) {
+		err = fclose(file);
+	}
 	return object;
 }
 
@@ -102,7 +107,7 @@ void loadObjectTxt(FILE* file, Object* object) {
 	object->numberOfVertexes = 0;
 	object->numberOfFaces = 0;
 	char* bytesRead = NULL;
-	bytesRead = fgets(&line, MAX_LINE, file);
+	bytesRead = fgets(line, MAX_LINE, file);
 	while (bytesRead != NULL && strstr(line, END_OBJECT) == NULL) {
 		if (line[0] == 'v' && line[1] == ' ') {
 			object->vertexes = realloc(vertexes,
@@ -125,7 +130,7 @@ void loadObjectTxt(FILE* file, Object* object) {
 			faces = object->faces;
 			createFace(line, &object->faces[object->numberOfFaces++]);
 		}
-		bytesRead = fgets(&line, MAX_LINE, file);
+		bytesRead = fgets(line, MAX_LINE, file);
 	}
 }
 
@@ -189,6 +194,9 @@ void getTotalArea(Object* ptr, void* totalAreaOfTriangularFaces) {
 }
 
 void printVertexes(Object* ptr, void* numberOfVertexes) {
+	if (ptr->numberOfVertexes == NULL) {
+		return;
+	}
 	int total = ptr->numberOfVertexes;
 	*(int*)numberOfVertexes += total;
 }
@@ -205,29 +213,30 @@ void printFaces(Object* ptr, void* numberOfTriangularFaces) {
 
 void transformObject(char* originalObjectFileName, char* deformedObjectFileName) {
 	float x, y, z;
-	FILE* orgFile = fopen(originalObjectFileName, "r");
-	if (orgFile == NULL) {
+	FILE * orgFile, *defoFile;
+	err	= fopen_s(&orgFile,originalObjectFileName, "r");
+	if (err != 0) {
 		printf("Failed Opening File %s! Aborting!", originalObjectFileName);
 		return;
 	}
-	FILE* defoFile = fopen(deformedObjectFileName, "w");
-	if (defoFile == NULL) {
+	err = fopen_s(&defoFile,deformedObjectFileName, "w");
+	if (err != 0) {
 		printf("Failed Opening File %s! Aborting!", deformedObjectFileName);
 		return;
 	}
 	char line[MAX_LINE];
 	char* bytesRead = NULL;
-	bytesRead = fgets(&line, MAX_LINE, orgFile);
+	bytesRead = fgets(line, MAX_LINE, orgFile);
 	while (bytesRead != NULL) {
 		if (line[0] == 'v' && line[1] == ' ') {
-			sscanf(line, "%*c %f %f %f", &x, &y, &z);
+			sscanf_s(line, "%*c %f %f %f", &x, &y, &z);
 			x = 0.3 * x;
 			fprintf(defoFile, "v %f %f %f\n", x, y, z);
 		}
 		else {
 			fprintf(defoFile, "%s", line);
 		}
-		bytesRead = fgets(&line, MAX_LINE, orgFile);
+		bytesRead = fgets(line, MAX_LINE, orgFile);
 	}
 	fclose(orgFile);
 	fclose(defoFile);
