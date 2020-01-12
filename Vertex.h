@@ -7,6 +7,8 @@ typedef struct {
 	float z;
 } Vertex;
 
-void saveVertexTxt(Vertex* vertex, FILE* file);
-
+//Takes a line that holds information about a Vertex and returns a defined Vertex.
 Vertex* createVertex(char* line);
+
+//Saves a Vertex to a txt file.
+void saveVertexTxt(Vertex* vertex, FILE* file);

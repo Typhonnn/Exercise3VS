@@ -17,12 +17,12 @@ Object* createObject(char* filename) {
 	FILE* file;
 	err = fopen_s(&file, filename, "r");
 	if (err != 0) {
-		printf("Failed Opening File %s! Aborting!", filename);
+		printf("Failed Opening File %s! Aborting!\n", filename);
 		return NULL;
 	}
 	Object* object = malloc(sizeof(Object));
 	if (object == NULL) {
-		printf("Failed Allocating Memory For Object! ABORTING!");
+		printf("Failed Allocating Memory For Object! ABORTING!\n");
 		return NULL;
 	}
 	loadObjectTxt(file, object); //Calls the method to handle the reading.
@@ -30,6 +30,98 @@ Object* createObject(char* filename) {
 		err = fclose(file);
 	}
 	return object;
+}
+
+//This method calculates the total area of triangular faces of an Object.
+//It uses Heron's Formula to find the solution.
+void getTotalArea(Object* ptr, void* totalAreaOfTriangularFaces) {
+	if (ptr == NULL) {
+		printf("Failed To getTotalArea! ABORTING!\n");
+		return;
+	}
+	int i;
+	double s, a, b, c;
+	for (i = 0; i < ptr->numberOfFaces; ++i) {//Calculate the size of each line.
+		if (ptr->faces[i].size == 3) {
+			a = pow(pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].x -
+				ptr->vertexes[ptr->faces[i].vertex[1] - 1].x), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].y -
+					ptr->vertexes[ptr->faces[i].vertex[1] - 1].y), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].z -
+					ptr->vertexes[ptr->faces[i].vertex[1] - 1].z), 2), 0.5);
+			b = pow(pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].x -
+				ptr->vertexes[ptr->faces[i].vertex[2] - 1].x), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].y -
+					ptr->vertexes[ptr->faces[i].vertex[2] - 1].y), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].z -
+					ptr->vertexes[ptr->faces[i].vertex[2] - 1].z), 2), 0.5);
+			c = pow(pow((ptr->vertexes[ptr->faces[i].vertex[1] - 1].x -
+				ptr->vertexes[ptr->faces[i].vertex[2] - 1].x), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[1] - 1].y -
+					ptr->vertexes[ptr->faces[i].vertex[2] - 1].y), 2) +
+				pow((ptr->vertexes[ptr->faces[i].vertex[1] - 1].z -
+					ptr->vertexes[ptr->faces[i].vertex[2] - 1].z), 2), 0.5);
+			s = (a + b + c) / 2; //Semi-perimiter.
+			*(double*)totalAreaOfTriangularFaces += 
+				pow(s * (s - a) * (s - b) * (s - c), 0.5); //Final solution.
+		}
+	}
+}
+
+//This function gives the number of vertexes of an Object.
+void printVertexes(Object* ptr, void* numberOfVertexes) {
+	if (ptr == NULL) {
+		printf("Failed To printVertexes! ABORTING!\n");
+		return;
+	}
+	*(int*)numberOfVertexes += ptr->numberOfVertexes;
+}
+
+//This function gives the number of faces with three vertexes.
+void printFaces(Object* ptr, void* numberOfTriangularFaces) {
+	if (ptr == NULL) {
+		printf("Failed To printFaces! ABORTING!\n");
+		return;
+	}
+	int i, counter = 0;
+	for (i = 0; i < ptr->numberOfFaces; i++) {
+		if (ptr->faces[i].size == 3) {
+			counter++;
+		}
+	}
+	*(int*)numberOfTriangularFaces += counter;
+}
+
+//This function takes an object file and modifies it's Vertex coordinates.
+void transformObject(char* originalObjectFileName, char* deformedObjectFileName) {
+	float x, y, z;
+	FILE* orgFile, * defoFile;
+	err = fopen_s(&orgFile, originalObjectFileName, "r");
+	if (err != 0) {
+		printf("Failed Opening File %s! Aborting!\n", originalObjectFileName);
+		return;
+	}
+	err = fopen_s(&defoFile, deformedObjectFileName, "w");
+	if (err != 0) {
+		printf("Failed Opening File %s! Aborting!\n", deformedObjectFileName);
+		return;
+	}
+	char line[MAX_LINE];
+	char* bytesRead = NULL;
+	bytesRead = fgets(line, MAX_LINE, orgFile);
+	while (bytesRead != NULL) {
+		if (line[0] == 'v' && line[1] == ' ') {
+			sscanf_s(line, "%*c %f %f %f", &x, &y, &z);
+			x = 0.3 * x;
+			fprintf(defoFile, "v %f %f %f\n", x, y, z);
+		}
+		else {
+			fprintf(defoFile, "%s", line);
+		}
+		bytesRead = fgets(line, MAX_LINE, orgFile);
+	}
+	fclose(orgFile);
+	fclose(defoFile);
 }
 
 //Saves an Object to a binary file.
@@ -51,7 +143,7 @@ void loadObjectBinary(FILE* file, Object* object) {
 	fread(&object->numberOfVertexes, sizeof(int), 1, file);
 	object->vertexes = malloc(object->numberOfVertexes * sizeof(Vertex));
 	if (object->vertexes == NULL) {
-		printf("Failed To Allocate Memory For Vertexes! ABORTING!");
+		printf("Failed To Allocate Memory For Vertexes! ABORTING!\n");
 		return;
 	}
 	int numOfVertexes = object->numberOfVertexes;
@@ -59,14 +151,14 @@ void loadObjectBinary(FILE* file, Object* object) {
 	fread(&object->numberOfFaces, sizeof(int), 1, file);
 	object->faces = malloc(object->numberOfFaces * sizeof(Face));
 	if (object->faces == NULL) {
-		printf("Failed To Allocate Memory For Faces! ABORTING!");
-		return ;
+		printf("Failed To Allocate Memory For Faces! ABORTING!\n");
+		return;
 	}
 	for (i = 0; i < object->numberOfFaces; ++i) {
 		fread(&object->faces[i].size, sizeof(int), 1, file);
 		object->faces[i].vertex = malloc(object->faces[i].size * sizeof(int));
 		if (object->faces[i].vertex == NULL) {
-			printf("Failed To Allocate Memory For Faces->Vertexes! ABORTING!");
+			printf("Failed To Allocate Memory For Faces->Vertexes! ABORTING!\n");
 			return;
 		}
 		fread(object->faces[i].vertex, sizeof(int), object->faces[i].size,
@@ -92,17 +184,17 @@ void saveObjectTxt(Object* object, FILE* file) {
 void loadObjectTxt(FILE* file, Object* object) {
 	object->vertexes = malloc(sizeof(Vertex));
 	if (object->vertexes == NULL) {
-		printf("Failed To Allocate Memory For Vertexes! ABORTING!");
+		printf("Failed To Allocate Memory For Vertexes! ABORTING!\n");
 		return;
 	}
 	object->faces = malloc(sizeof(Face));
 	if (object->faces == NULL) {
-		printf("Failed To Allocate Memory For Faces! ABORTING!");
+		printf("Failed To Allocate Memory For Faces! ABORTING!\n");
 		return;
 	}
 	object->faces->vertex = calloc(3, sizeof(int));
 	if (object->faces->vertex == NULL) {
-		printf("Failed To Allocate Memory For Faces -> Vertexes! ABORTING!");
+		printf("Failed To Allocate Memory For Faces -> Vertexes! ABORTING!\n");
 		return;
 	}
 	char line[MAX_LINE];
@@ -116,9 +208,9 @@ void loadObjectTxt(FILE* file, Object* object) {
 		if (line[0] == 'v' && line[1] == ' ') {
 			object->vertexes = realloc(vertexes,
 				(object->numberOfVertexes + 1) * sizeof(Vertex));
-			if (vertexes == NULL) {
+			if (object->vertexes == NULL) {
 				printf(
-					"Failed To Reallocate Memory For New Vertexes! ABORTING!");
+					"Failed To Reallocate Memory For New Vertexes! ABORTING!\n");
 				return;
 			}
 			vertexes = object->vertexes;
@@ -127,8 +219,8 @@ void loadObjectTxt(FILE* file, Object* object) {
 		else if (line[0] == 'f' && line[1] == ' ') {
 			object->faces = realloc(faces,
 				(object->numberOfFaces + 1) * sizeof(Face));
-			if (faces == NULL) {
-				printf("Failed To Reallocate Memory For New Faces! ABORTING!");
+			if (object->faces == NULL) {
+				printf("Failed To Reallocate Memory For New Faces! ABORTING!\n");
 				return;
 			}
 			faces = object->faces;
@@ -136,82 +228,4 @@ void loadObjectTxt(FILE* file, Object* object) {
 		}
 		bytesRead = fgets(line, MAX_LINE, file);
 	}
-}
-
-//This method calculates the total area of triangular faces of an Object.
-//It uses Heron's Formula to find the solution.
-void getTotalArea(Object* ptr, void* totalAreaOfTriangularFaces) {
-	int i;
-	double s, a, b, c;
-	for (i = 0; i < ptr->numberOfFaces; ++i) {
-		if (ptr->faces[i].size == 3) {
-			a =	pow(pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].x -
-				ptr->vertexes[ptr->faces[i].vertex[1]	- 1].x), 2)	+
-				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].y -
-					ptr->vertexes[ptr->faces[i].vertex[1] - 1].y), 2) +
-				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].z -
-					ptr->vertexes[ptr->faces[i].vertex[1] - 1].z), 2), 0.5);
-			b =	pow(pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].x -
-				ptr->vertexes[ptr->faces[i].vertex[2] - 1].x), 2) +
-				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].y -
-					ptr->vertexes[ptr->faces[i].vertex[2] - 1].y), 2) +
-				pow((ptr->vertexes[ptr->faces[i].vertex[0] - 1].z -
-					ptr->vertexes[ptr->faces[i].vertex[2] - 1].z), 2), 0.5);
-			c =	pow(pow((ptr->vertexes[ptr->faces[i].vertex[1] - 1].x -
-				ptr->vertexes[ptr->faces[i].vertex[2] - 1].x), 2) +
-				pow((ptr->vertexes[ptr->faces[i].vertex[1] - 1].y -
-					ptr->vertexes[ptr->faces[i].vertex[2] - 1].y), 2) +
-				pow((ptr->vertexes[ptr->faces[i].vertex[1] - 1].z -
-					ptr->vertexes[ptr->faces[i].vertex[2] - 1].z), 2), 0.5);
-			s = (a + b + c) / 2;
-			*(double*)totalAreaOfTriangularFaces +=
-				pow(s * (s - a) * (s - b) * (s - c), 0.5);
-		}
-	}
-}
-
-//This function gives the number of vertexes of an Object.
-void printVertexes(Object* ptr, void* numberOfVertexes) {
-	*(int*)numberOfVertexes += ptr->numberOfVertexes;
-}
-
-void printFaces(Object* ptr, void* numberOfTriangularFaces) {
-	int i, counter = 0;
-	for (i = 0; i < ptr->numberOfFaces; i++) {
-		if (ptr->faces[i].size == 3) {
-			counter++;
-		}
-	}
-	*(int*)numberOfTriangularFaces += counter;
-}
-
-void transformObject(char* originalObjectFileName, char* deformedObjectFileName) {
-	float x, y, z;
-	FILE * orgFile, *defoFile;
-	err	= fopen_s(&orgFile,originalObjectFileName, "r");
-	if (err != 0) {
-		printf("Failed Opening File %s! Aborting!", originalObjectFileName);
-		return;
-	}
-	err = fopen_s(&defoFile,deformedObjectFileName, "w");
-	if (err != 0) {
-		printf("Failed Opening File %s! Aborting!", deformedObjectFileName);
-		return;
-	}
-	char line[MAX_LINE];
-	char* bytesRead = NULL;
-	bytesRead = fgets(line, MAX_LINE, orgFile);
-	while (bytesRead != NULL) {
-		if (line[0] == 'v' && line[1] == ' ') {
-			sscanf_s(line, "%*c %f %f %f", &x, &y, &z);
-			x = 0.3 * x;
-			fprintf(defoFile, "v %f %f %f\n", x, y, z);
-		}
-		else {
-			fprintf(defoFile, "%s", line);
-		}
-		bytesRead = fgets(line, MAX_LINE, orgFile);
-	}
-	fclose(orgFile);
-	fclose(defoFile);
 }
